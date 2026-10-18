@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Door Policy promo art</title>
+<style>
+  :root {
+    --ink: #1d1033; --paper: #fff8ec; --ok: #2bd46b; --ok-dark: #138a3f; --bad: #ff4d5e; --gold: #ffc93c;
+    --font: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  }
+  body { margin: 0; padding: 20px; background: #222; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; font-family: var(--font); }
+  .art {
+    position: relative; overflow: hidden; flex: none;
+    background:
+      radial-gradient(70% 55% at 50% 30%, rgba(255, 93, 162, .55), transparent 70%),
+      radial-gradient(50% 40% at 15% 95%, rgba(0, 245, 212, .3), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, .06) 0 26px, transparent 26px 52px),
+      #2a1650;
+  }
+  #t512 { width: 512px; height: 512px; }
+  #t628 { width: 628px; height: 314px; }
+  .logo {
+    position: absolute; display: flex; flex-direction: column; align-items: center; line-height: .84;
+    font-weight: 900; color: #fff; letter-spacing: .02em;
+    -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill;
+    text-shadow: 0 0 22px rgba(255, 93, 162, .95), 0 7px 0 var(--ink), 0 12px 24px rgba(0,0,0,.5);
+  }
+  .logo .a { color: #ffe66d; transform: rotate(-4deg); }
+  .logo .b { color: #ff5da2; transform: rotate(3deg); font-size: .8em; }
+  .door {
+    position: absolute; border-radius: 999px 999px 10px 10px;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 20px, transparent 20px 40px), linear-gradient(#ff5da2, #b0125a);
+    border: 4px solid var(--ink);
+    box-shadow: 0 0 0 9px #ffe66d, 0 0 50px 18px rgba(255, 93, 162, .7), 0 6px 0 9px var(--ink);
+  }
+  .door .sign { position: absolute; left: 50%; top: 13%; transform: translateX(-50%); font: 900 20px var(--font); color: #ffe66d; background: var(--ink); padding: 3px 10px; border-radius: 8px; }
+  .door .knob { position: absolute; right: 14%; top: 55%; width: 12px; height: 12px; border-radius: 50%; background: var(--gold); border: 2px solid var(--ink); }
+  .emo { position: absolute; font-family: var(--emoji); line-height: 1; filter: drop-shadow(0 4px 0 var(--ink)); }
+  .card {
+    position: absolute; border-radius: 20px; background: var(--paper); border: 4px solid var(--ink);
+    box-shadow: 0 7px 0 var(--ink), 0 20px 40px rgba(0,0,0,.45);
+    overflow: hidden;
+  }
+  .card .head { position: absolute; left: 50%; transform: translateX(-50%); border-radius: 50%; background: #ffd45e; border: 4px solid var(--ink); }
+  .card .head::before, .card .head::after { content: ""; position: absolute; top: 40%; width: 12%; height: 12%; border-radius: 50%; background: var(--ink); }
+  .card .head::before { left: 30%; } .card .head::after { right: 30%; }
+  .card .smile { position: absolute; left: 50%; transform: translateX(-50%); border: 4px solid var(--ink); border-color: transparent transparent var(--ink) transparent; border-radius: 50%; }
+  .card svg { position: absolute; left: 50%; transform: translateX(-50%); }
+  .stamp {
+    position: absolute; padding: 6px 14px; font: 900 30px/1 var(--font); letter-spacing: .04em; color: var(--ok-dark);
+    border: 6px solid currentColor; border-radius: 12px; background: rgba(255,255,255,.9); transform: rotate(-14deg); white-space: nowrap;
+  }
+  .rope { position: absolute; height: 18px; border-bottom: 8px solid #c2185b; border-radius: 0 0 50% 50% / 0 0 100% 100%; filter: drop-shadow(0 3px 0 var(--ink)); }
+  .post { position: absolute; width: 14px; background: linear-gradient(90deg, #d9a400, #ffd75e, #d9a400); border: 3px solid var(--ink); border-radius: 7px 7px 3px 3px; }
+  .bubble { position: absolute; background: #fff; color: var(--ink); border: 4px solid var(--ink); border-radius: 18px; font: 900 20px/1.1 var(--font); padding: 8px 14px; box-shadow: 0 4px 0 var(--ink); white-space: nowrap; }
+  .tag { position: absolute; left: 50%; transform: translateX(-50%) rotate(-2deg); background: #fff; border: 3px solid var(--ink); border-radius: 999px; font: 900 18px var(--font); padding: 2px 12px; }
+  .spark { position: absolute; font-family: var(--emoji); opacity: .8; }
+</style>
+</head>
+<body>
+
+<!-- 512 x 512 -->
+<div class="art" id="t512">
+  <span class="spark" style="left:30px;top:150px;font-size:26px">✨</span>
+  <span class="spark" style="right:26px;top:22px;font-size:44px">🪩</span>
+  <span class="spark" style="right:40px;top:200px;font-size:24px">⭐</span>
+  <div class="logo" style="left:0;right:0;top:26px;font-size:96px"><span class="a">DOOR</span><span class="b">POLICY</span></div>
+  <div class="door" style="left:58px;top:236px;width:150px;height:236px"><span class="sign">VIP</span><i class="knob"></i></div>
+  <div class="post" style="left:30px;top:420px;height:70px"></div>
+  <div class="rope" style="left:36px;width:180px;top:430px"></div>
+  <div class="post" style="left:212px;top:420px;height:70px"></div>
+  <span class="emo" style="left:6px;top:330px;font-size:84px;transform:rotate(-6deg)">🐻</span>
+  <span class="emo" style="left:62px;top:372px;font-size:40px;transform:rotate(14deg)">📋</span>
+  <div class="card" style="left:262px;top:226px;width:200px;height:262px;transform:rotate(6deg)">
+    <span class="emo" style="left:62px;top:14px;font-size:66px;transform:rotate(-6deg)">🎩</span>
+    <div class="head" style="top:74px;width:74px;height:74px"></div>
+    <div class="smile" style="top:96px;width:34px;height:30px"></div>
+    <svg viewBox="0 0 120 100" style="top:140px;width:116px"><path d="M22,22 L44,8 Q60,20 76,8 L98,22 L114,44 L96,54 L90,44 L90,96 L30,96 L30,44 L24,54 L6,44 Z" fill="#3A86FF" stroke="#1d1033" stroke-width="5" stroke-linejoin="round"/></svg>
+    <span class="emo" style="left:138px;top:150px;font-size:44px;transform:rotate(10deg)">🎈</span>
+    <span class="emo" style="left:8px;top:196px;font-size:44px">🐶</span>
+    <div class="stamp" style="left:18px;top:178px;font-size:28px">✅ ADMIT</div>
+  </div>
+  <div class="bubble" style="left:262px;top:178px;transform:rotate(-3deg)">What's the rule? 🤔</div>
+</div>
+
+<!-- 628 x 314 -->
+<div class="art" id="t628">
+  <span class="spark" style="left:16px;top:16px;font-size:24px">✨</span>
+  <span class="spark" style="left:300px;top:250px;font-size:22px">⭐</span>
+  <span class="spark" style="right:18px;top:12px;font-size:38px">🪩</span>
+  <div class="logo" style="left:22px;top:44px;font-size:80px;align-items:flex-start"><span class="a">DOOR</span><span class="b" style="margin-left:14px">POLICY</span></div>
+  <div class="bubble" style="left:40px;top:222px;transform:rotate(-2deg);font-size:18px">Crack the secret rule! 🤔</div>
+  <div class="door" style="left:338px;top:58px;width:118px;height:206px"><span class="sign">VIP</span><i class="knob"></i></div>
+  <span class="emo" style="left:300px;top:186px;font-size:84px;transform:rotate(-6deg)">🐻</span>
+  <div class="card" style="left:466px;top:40px;width:136px;height:190px;transform:rotate(6deg)">
+    <span class="emo" style="left:40px;top:8px;font-size:46px;transform:rotate(-6deg)">🎩</span>
+    <div class="head" style="top:50px;width:52px;height:52px"></div>
+    <div class="smile" style="top:66px;width:24px;height:22px"></div>
+    <svg viewBox="0 0 120 100" style="top:98px;width:84px"><path d="M22,22 L44,8 Q60,20 76,8 L98,22 L114,44 L96,54 L90,44 L90,96 L30,96 L30,44 L24,54 L6,44 Z" fill="#E63946" stroke="#1d1033" stroke-width="5" stroke-linejoin="round"/></svg>
+    <span class="emo" style="left:92px;top:100px;font-size:30px;transform:rotate(10deg)">🍕</span>
+    <span class="emo" style="left:6px;top:138px;font-size:32px">🐱</span>
+    <div class="stamp" style="left:8px;top:124px;font-size:18px;border-width:4px;padding:4px 8px">✅ ADMIT</div>
+  </div>
+  <div class="post" style="left:470px;top:250px;height:56px"></div>
+  <div class="rope" style="left:476px;width:130px;top:258px"></div>
+  <div class="post" style="left:600px;top:250px;height:56px"></div>
+</div>
+
+</body>
+</html>
