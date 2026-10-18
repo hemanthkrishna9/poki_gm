@@ -1,0 +1,30 @@
+{
+  "id": "c1s1",
+  "club": 1,
+  "visible": ["hat", "item", "shirt", "pet"],
+  "target": { "op": "is", "t": "hat", "v": "top" },
+  "guests": [
+    { "hat": "top",  "item": "banana", "shirt": "blue",  "pet": "dog",  "mood": "grin",  "name": "Kofi",  "age": 31, "quote": 3 },
+    { "hat": "none", "item": "banana", "shirt": "blue",  "pet": "dog",  "mood": "grin",  "name": "Kofi",  "age": 31, "quote": 3 },
+    { "hat": "top",  "item": "rose",   "shirt": "red",   "pet": "none", "mood": "cool",  "name": "Lena",  "age": 44, "quote": 10 },
+    { "hat": "none", "item": "book",   "shirt": "green", "pet": "cat",  "mood": "sad",   "name": "Raj",   "age": 27, "quote": 21 },
+    { "hat": "top",  "item": "none",   "shirt": "white", "pet": "fish", "mood": "think", "name": "Freya", "age": 62, "quote": 40 }
+  ],
+  "labels": [true, false, true, false, true],
+  "demoCount": 2,
+  "win": { "inRow": 3, "total": 3 },
+  "choices": [
+    { "op": "is", "t": "hat", "v": "top" },
+    { "op": "is", "t": "item", "v": "banana" },
+    { "op": "is", "t": "pet", "v": "dog" },
+    { "op": "is", "t": "shirt", "v": "blue" }
+  ],
+  "correctIdx": 0,
+  "lenient": [
+    { "admit": false, "reject": false }, { "admit": false, "reject": false },
+    { "admit": false, "reject": false }, { "admit": false, "reject": false },
+    { "admit": false, "reject": false }
+  ],
+  "hintPair": [0, 1],
+  "ruleTraits": ["hat"]
+}

@@ -1,0 +1,15 @@
+{
+  "level": "<the Level object from level.sample.json>",
+  "phase": "play",
+  "idx": 3,
+  "strikes": 0,
+  "streak": 1,
+  "correct": 1,
+  "lenientUsed": 0,
+  "history": [{ "i": 2, "call": true, "ok": true }],
+  "hintsUsed": 0,
+  "revived": false,
+  "outcome": null,
+  "guessedRight": null,
+  "stars": 0
+}
