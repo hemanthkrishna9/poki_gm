@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Tricky Taps</title>
+  <link rel="stylesheet" href="src/style.css">
+  <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="hud">
+      <button id="btn-home" class="round" aria-label="Home">⌂</button>
+      <button id="btn-sound" class="round" aria-label="Sound">♪</button>
+      <div id="level-label">LEVEL 1</div>
+      <div id="bulbs"><span id="bulb-count">50</span> 💡</div>
+    </div>
+    <div id="question"></div>
+    <div id="stage"></div>
+    <div id="bar">
+      <button id="btn-hint" class="pill">💡 Hint <small>25</small></button>
+      <button id="btn-skip" class="pill">⏩ Skip <small>50</small></button>
+      <button id="btn-reward" class="pill reward">🎬 +50 💡</button>
+    </div>
+
+    <div id="title" class="screen">
+      <h1>Tricky Taps</h1>
+      <p class="tag">Think outside the box!</p>
+      <button id="btn-play" class="big">PLAY</button>
+      <div id="level-grid"></div>
+    </div>
+
+    <div id="panel" class="screen hidden">
+      <div class="card">
+        <h2 id="panel-title"></h2>
+        <p id="panel-text"></p>
+        <button id="panel-btn" class="big"></button>
+      </div>
+    </div>
+  </div>
+  <script src="src/levels.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
