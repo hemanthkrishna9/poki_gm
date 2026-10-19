@@ -16,6 +16,8 @@ const OUT = join(ROOT, 'src/data/levels.js');
 const SEED_RETRIES = 50;
 const PROC_SEEDS_PER_TARGET = 10;
 const PROC_TARGET_TRIES = 60;
+const CLUB_SHIFTS = 20; // every club, handcrafted + procedural
+const PREV_SHIFTS = 4; // C5: rules about the previous guest only in its last shifts
 
 const V1 = ['hat', 'item', 'shirt', 'pet'];
 const V2 = ['hat', 'item', 'shirt', 'pet', 'mood'];
@@ -182,16 +184,16 @@ function bakeClub(club) {
     used.add(ruleKey(h.target));
     levels.push(L);
   });
-  const nProc = club <= 2 ? 8 : 10;
+  const nProc = CLUB_SHIFTS - hand.length;
   const rng = createRng(`club:${club}`);
   const proc = [];
   for (let k = 0; k < nProc; k++) {
-    const allowPrev = club === 5 && k >= 7; // C5: prev only in shifts 8-10
+    const allowPrev = club === 5 && k >= nProc - PREV_SHIFTS;
     const gen = (r) => FAMILY[club](r, vis, allowPrev);
     const spec = { id: '', club, visible: vis, earlyCheck: early };
     proc.push(proceduralLevel(spec, gen, rng, used, `club${club}:${k}`));
   }
-  // ramp: cheaper rules first; C5 keeps its prev rules at shifts 8-10
+  // ramp: cheaper rules first; C5 keeps its prev rules in its last shifts
   const order = proc.map((L, i) => ({ L, i, prev: usesPrev(L.target) }));
   order.sort((a, b) => (a.prev - b.prev) || (ruleCost(a.L.target) - ruleCost(b.L.target)) || (a.i - b.i));
   order.forEach(({ L }) => levels.push(L));

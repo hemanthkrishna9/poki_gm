@@ -21,7 +21,7 @@ test('levels.js is within budget and has the planned shape', () => {
   assert.doesNotMatch(src, /"p":/, 'palette is bake-only');
   assert.equal(LEVELS.clubs[1].length, 20);
   assert.equal(LEVELS.clubs[2].length, 20);
-  for (let c = 3; c <= 6; c++) assert.equal(LEVELS.clubs[c].length, 10);
+  for (let c = 3; c <= 6; c++) assert.equal(LEVELS.clubs[c].length, 20);
   const keys = Object.keys(LEVELS.daily);
   assert.equal(keys.length, 366);
   assert.equal(keys[0], '2026-11-01');
@@ -102,7 +102,7 @@ test('handcrafted onboarding and special nights', () => {
   for (const L of c2) assert.ok(['has', 'not-is'].includes(opOf(L.target)) || (L.target.op === 'is' && L.target.v === 'none'), L.id);
   for (const e of LEVELS.clubs[4]) assert.ok(['and', 'or'].includes(decodeLevel(e).target.op));
   const c5 = LEVELS.clubs[5].map(decodeLevel);
-  c5.forEach((L, i) => assert.equal(L.target.op === 'prev', i >= 7, L.id));
+  c5.forEach((L, i) => assert.equal(L.target.op === 'prev', i >= c5.length - 4, L.id));
 });
 
 test('every baked level passes the fairness re-check (and the cap keeps all cheap hypotheses)', () => {
