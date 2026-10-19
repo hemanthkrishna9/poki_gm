@@ -91,7 +91,7 @@
     puffCloud: () => svg('0 0 180 110', `<path d="M36 96 Q6 96 10 72 Q8 48 38 50 Q44 18 84 22 Q108 2 136 22 Q172 22 170 58 Q178 96 144 96 Z" fill="#fff"/>
       ${face(76, 116, 58)}<circle cx="96" cy="74" r="6" fill="none" stroke-width="3"/>`),
     sea: (clear) => svg('0 0 960 260', `<path d="M0 12 Q40 2 80 12 T160 12 T240 12 T320 12 T400 12 T480 12 T560 12 T640 12 T720 12 T800 12 T880 12 T960 12 L960 260 L0 260 Z"
-      fill="#1e88e5" fill-opacity="${clear ? 0.3 : 0.9}" stroke="none"/>
+      fill="#1e88e5" fill-opacity="${clear ? 0.3 : 1}" stroke="none"/>
       <path d="M0 12 Q40 2 80 12 T160 12 T240 12 T320 12 T400 12 T480 12 T560 12 T640 12 T720 12 T800 12 T880 12 T960 12" fill="none" stroke="#fff" stroke-width="5" opacity=".9"/>
       <path d="M60 70 q20 -8 40 0 M300 110 q20 -8 40 0 M140 200 q20 -8 40 0" fill="none" stroke="#fff" stroke-width="3" opacity=".35"/>`),
     bergA: () => svg('0 0 220 260', `<polygon points="20,170 50,90 75,110 105,15 140,80 165,60 200,170 170,212 110,234 55,212" fill="#fff"/>
@@ -253,7 +253,7 @@
       id: 'kite',
       q: ['Make the kite fly!'],
       hint: 'No wind today? Make your own.',
-      answer: 'Drag the kid to run across the field.',
+      answer: 'Drag the kid to run back and forth across the field.',
       setup(a) {
         a.stage.style.background = '#bfe9ff';
         const puff = a.put(P3.puffCloud(), 600, 30, 180, 110, { z: 1 });
@@ -262,7 +262,7 @@
         const line = deco(a, '', 0, 0, 960, 440, 4);
         const kite = a.put(P3.kite(), 0, 0, 90, 130, { z: 5 });
         const kid = a.put(P3.kid(), 90, 200, 110, 170, { z: 6 });
-        let dist = 0, lastX = null, dir = 1, lift = 0;
+        let dist = 0, lastX = null, dir = 1, lift = 0, rest = 0;
         const place = () => {
           const k = a.box(kid);
           const hx = k.x + (dir > 0 ? 96 : 14), hy = k.y + 58;
@@ -280,6 +280,7 @@
         a.drag(kid, {
           onTap: () => a.say('No wind today…', a.box(kid).cx, a.box(kid).y),
           onMove: (el) => {
+            clearTimeout(rest);
             const x = parseFloat(el.style.left);
             if (lastX === null) lastX = x;
             const dx = x - lastX;
@@ -289,7 +290,7 @@
               el.style.transform = dir > 0 ? '' : 'scaleX(-1)';
             }
             dist += Math.abs(dx);
-            lift = Math.min(1, dist / 520);
+            lift = Math.min(1, dist / 420);
             kite.style.transition = 'none';
             place();
             if (lift >= 1) {
@@ -301,9 +302,13 @@
             lastX = null;
             if (a.done) return;
             if (dist > 120) a.say('Keep running!', a.box(kid).cx, a.box(kid).y);
-            dist = 0; lift = 0;
-            kite.style.transition = 'left .6s, top .6s, transform .6s';
-            place();
+            // a short breather keeps the kite up; stop too long and it falls
+            rest = setTimeout(() => {
+              if (a.done) return;
+              dist = 0; lift = 0;
+              kite.style.transition = 'left .6s, top .6s, transform .6s';
+              place();
+            }, 1200);
           },
         });
       },

@@ -73,24 +73,30 @@ const ART = {
     <line x1="168" y1="40" x2="160" y2="20" stroke-width="3"/><line x1="174" y1="40" x2="182" y2="20" stroke-width="3"/>
     <circle cx="105" cy="48" r="30" fill="#c58b4f"/>
     <path d="M105 48 m-6 0 a6 6 0 1 1 12 0 a12 12 0 1 1 -24 0 a18 18 0 1 1 36 0" fill="none" stroke-width="3"/>`),
-  elephant: () => svg('0 0 230 190', `
-    <rect x="50" y="130" width="28" height="50" rx="6" fill="#a8b3bd"/><rect x="130" y="130" width="28" height="50" rx="6" fill="#a8b3bd"/>
-    <ellipse cx="105" cy="105" rx="80" ry="55" fill="#a8b3bd"/>
-    <path d="M190 100 Q215 140 196 175" fill="none" stroke-width="14"/>
-    <path d="M190 100 Q215 140 196 175" fill="none" stroke="#a8b3bd" stroke-width="8"/>
-    <circle cx="180" cy="80" r="38" fill="#a8b3bd"/>
-    <ellipse cx="160" cy="80" rx="22" ry="32" fill="#c3ccd4"/>
-    <circle cx="196" cy="72" r="4" fill="#2b2b2b"/>
-    <path d="M27 95 Q14 110 22 125" fill="none"/>`),
-  fridgeBody: () => svg('0 0 180 320', `
-    <rect x="4" y="4" width="172" height="312" rx="12" fill="#f2f2f2"/>
-    <rect x="16" y="16" width="148" height="288" rx="6" fill="#d8f2ff"/>
-    <line x1="16" y1="110" x2="164" y2="110"/><line x1="16" y1="210" x2="164" y2="210"/>
-    <circle cx="50" cy="94" r="12" fill="#e53935"/><rect x="100" y="180" width="30" height="28" fill="#fff"/>`),
-  fridgeDoor: () => svg('0 0 180 320', `
-    <rect x="4" y="4" width="172" height="312" rx="12" fill="#fafafa"/>
-    <line x1="4" y1="110" x2="176" y2="110"/>
-    <rect x="22" y="40" width="10" height="50" rx="4" fill="#bbb"/><rect x="22" y="130" width="10" height="80" rx="4" fill="#bbb"/>`),
+  tree: () => svg('0 0 360 440', `
+    <path d="M150 440 L160 140 L205 140 L215 440 Z" fill="#8d5a3b"/>
+    <path d="M190 190 Q260 165 350 158 L350 176 Q262 184 196 214 Z" fill="#8d5a3b"/>
+    <circle cx="110" cy="110" r="80" fill="#6fbf73"/><circle cx="215" cy="80" r="78" fill="#7bd389"/>
+    <circle cx="160" cy="40" r="55" fill="#7bd389"/>
+    <circle cx="90" cy="95" r="7" fill="#e53935"/><circle cx="230" cy="60" r="7" fill="#e53935"/><circle cx="175" cy="125" r="7" fill="#e53935"/>`),
+  cat: (happy) => svg('0 0 110 90', `
+    <path d="M18 70 Q0 70 4 88" fill="none" stroke-width="6"/>
+    <ellipse cx="45" cy="64" rx="32" ry="20" fill="#ffab40"/>
+    <polygon points="62,22 66,4 78,18" fill="#ffab40"/><polygon points="86,18 98,4 100,24" fill="#ffab40"/>
+    <circle cx="82" cy="38" r="22" fill="#ffab40"/>
+    <path d="M30 50 q4 8 0 16 M44 46 q4 8 0 16" fill="none" stroke="#e65100" stroke-width="3"/>
+    ${happy
+      ? '<path d="M71 36 q4 -5 8 0 M86 36 q4 -5 8 0" fill="none" stroke-width="3"/><path d="M78 46 q4 4 8 0" fill="none" stroke-width="3"/>'
+      : '<circle cx="75" cy="36" r="4" fill="#2b2b2b"/><circle cx="90" cy="36" r="4" fill="#2b2b2b"/><ellipse cx="83" cy="49" rx="4" ry="5" fill="#c62828" stroke-width="2"/>'}`),
+  ladder: () => svg('0 0 90 190', `
+    <line x1="18" y1="6" x2="18" y2="186" stroke="#8d5a3b" stroke-width="10"/>
+    <line x1="72" y1="6" x2="72" y2="186" stroke="#8d5a3b" stroke-width="10"/>
+    ${[30, 70, 110, 150].map((y) => `<line x1="18" y1="${y}" x2="72" y2="${y}" stroke="#a1887f" stroke-width="8"/>`).join('')}`),
+  tuna: () => svg('0 0 100 70', `
+    <path d="M8 22 L8 54 Q50 70 92 54 L92 22 Z" fill="#4fc3f7"/>
+    <ellipse cx="50" cy="22" rx="42" ry="12" fill="#cfd8dc"/>
+    <path d="M30 42 q10 -9 22 0 q-12 9 -22 0 z M52 42 l9 -6 v12 z" fill="#fff" stroke-width="2"/>
+    <text x="72" y="49" font-size="11" text-anchor="middle" fill="#fff" stroke="none" font-family="sans-serif" font-weight="bold">TUNA</text>`),
   feathers: () => svg('0 0 140 150', `
     <path d="M30 40 Q20 140 40 142 L100 142 Q120 140 110 40 Z" fill="#e9d8b4"/>
     <path d="M30 40 Q70 20 110 40" fill="none"/>

@@ -165,6 +165,7 @@ async function open(target, o = {}) {
     },
     async solve1() { await g.tapObj(2); await g.waitPanel(); },
     async solve(id) { await SOL[id](runHelper(page)); await g.waitPanel(); },
+    async solveCurrent() { const id = await page.evaluate(() => LEVELS[cur].id); await g.solve(id); },
     async close() { allMute.push(...(await g.mute().catch(() => []))); await ctx.close(); },
   };
   return g;
@@ -258,7 +259,7 @@ async function main() {
     await g.click('#level-grid button:nth-child(1)'); await g.waitLevel(1);
     await g.click('#btn-home'); await expectStopped('home button (2)');
     await g.click('#btn-play'); await g.waitLevel(2);
-    await g.solve('mouse'); await expectStopped('level won (L2)');
+    await g.solveCurrent(); await expectStopped('level won (L2)');
     await g.click('#panel-btn'); nexts++; await g.waitAdEnd('commercialBreak', 2); await g.waitLevel(3);
     await g.click('#btn-skip'); await g.waitPanel(4000); await expectStopped('skip → won (L3)');
     await g.click('#panel-btn'); nexts++; await g.waitAdEnd('commercialBreak', 3); await g.waitLevel(4);
@@ -267,7 +268,7 @@ async function main() {
     const t1 = await g.panelTitle();
     await expectStopped(`out-of-bulbs panel via skip (panel title "${t1}", bulbs ${await g.bulbs()})`);
     await g.click('#panel-btn');
-    await g.solve('snowman'); await expectStopped('level won (L4)');
+    await g.solveCurrent(); await expectStopped('level won (L4)');
     await g.click('#panel-btn'); nexts++; await g.waitAdEnd('commercialBreak', 4); await g.waitLevel(5);
     await g.click('#btn-hint'); await g.waitPanel();
     await expectStopped(`out-of-bulbs panel via hint (panel title "${await g.panelTitle()}", bulbs ${await g.bulbs()})`);
@@ -420,7 +421,7 @@ async function main() {
       const b0 = await g.bulbs(); await g.click('#btn-reward'); await g.wait(800);
       const b1 = await g.bulbs();
       await g.click('#btn-hint'); await g.waitPanel(); await g.click('#panel-btn');
-      await g.solve('mouse'); await g.click('#panel-btn'); await g.waitLevel(3);
+      await g.solveCurrent(); await g.click('#panel-btn'); await g.waitLevel(3);
       const sdk = await g.ev(() => typeof window.PokiSDK);
       subs.push(sub(`${mode}: boots, levels 1→3 playable (PokiSDK ${sdk})`, true));
       subs.push(sub(`${mode}: 🎬 grants nothing`, b1 === b0, `${b0} → ${b1}`));
@@ -519,7 +520,7 @@ async function main() {
     const b0 = await g.bulbs(); await g.solve1();
     const bonus = (await g.bulbs()) - b0;
     await g.click('#panel-btn'); await g.waitLevel(2, 1500);
-    await g.solve('mouse'); await g.click('#panel-btn'); await g.waitLevel(3, 1500);
+    await g.solveCurrent(); await g.click('#panel-btn'); await g.waitLevel(3, 1500);
     const ext = g.requests.filter((u) => !u.startsWith(BASE));
     const r = [sub('no SDK <script> in index.html', !/<script[^>]+src="https?:/.test(html) && !/poki|crazygames/i.test(html.replace(/PLATFORM = 'none'/, ''))),
       sub('zero third-party requests', !ext.length, ext.join(', ')),
@@ -674,10 +675,15 @@ async function main() {
     await g.close();
     g = await open('poki', { init: [seed(JSON.stringify({ unlocked: 5, cleared: [0, 1, 2, 3], bulbs: 70 }))], label: 'save-v1' });
     gs = await gridState(g);
-    subs.push(sub('v1 save: levels 1-4 done, 5 unlocked, rest locked', gs.slice(0, 4).every((x) => x === 2) && gs[4] === 1 && gs.slice(5).every((x) => x === 0), `grid ${gs.join('')}`));
+    // v1 cleared indices 0-3 = largest, mouse, jar, snowman; expected grid follows the current play order
+    const done = ['largest', 'mouse', 'jar', 'snowman'];
+    const ids = await g.ev(() => LEVELS.map((l) => l.id));
+    const want = ids.map((id, i) => (done.includes(id) ? 2 : i === 0 || done.includes(ids[i - 1]) ? 1 : 0));
+    subs.push(sub('v1 save: the 4 cleared levels done, their successors unlocked, rest locked', gs.join('') === want.join(''), `grid ${gs.join('')} want ${want.join('')}`));
     subs.push(sub('v1 save: 70 bulbs', (await g.bulbs()) === 70 && (await g.page.textContent('#bulb-count')) === '70'));
-    await g.click('#btn-play'); await g.waitLevel(5);
-    subs.push(sub('v1 save: PLAY resumes at level 5', true));
+    const firstOpen = ids.findIndex((id) => !done.includes(id)) + 1;
+    await g.click('#btn-play'); await g.waitLevel(firstOpen);
+    subs.push(sub(`v1 save: PLAY resumes at the first unsolved level (${firstOpen})`, true));
     await g.click('#btn-sound');
     const saved = JSON.parse(await g.ev(() => localStorage.getItem('trickytaps')));
     subs.push(sub('v1 save: rewritten as ids, no "unlocked"', JSON.stringify(saved.cleared) === JSON.stringify(['largest', 'mouse', 'jar', 'snowman']) && !('unlocked' in saved), JSON.stringify(saved)));

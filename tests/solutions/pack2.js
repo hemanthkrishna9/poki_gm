@@ -15,10 +15,10 @@ module.exports = {
     await h.tap(1);
     await h.drag(1, 380, 300);
     await h.wait(300);
-    for (let i = 0; i < 5; i++) await h.tap(1);
+    for (let i = 0; i < 3; i++) await h.tap(1);
   },
   // 0 side table, 1 alarm clock, 2 grandpa on sofa, 3 tv
-  tvnap: async (h) => { await h.tap(1); await h.tap(2); await h.tap(3); },
+  tvnap: async (h) => { await h.tap(1); await h.tap(2); }, // 0 side table, 1 grandpa (wrong), 2 TV
   // dolls 0 (230, red), 1 (130, blue), 2 (175, green), 3 (95, yellow); 4 toy box
   nesting: async (h) => {
     await h.drag(0, 805, 320);                 // box only fits one while others are out

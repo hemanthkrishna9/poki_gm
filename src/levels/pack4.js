@@ -128,10 +128,10 @@
       answer: '11 — t-h-e a-l-p-h-a-b-e-t.',
       setup(a) {
         a.put(P4.poster(), 180, 14, 600, 150);
-        a.put(P4.blocks(), 760, 300, 180, 108);
+        a.put(P4.blocks(), 770, 320, 180, 108);
         const opts = [[26, '#9fe0f5'], [10, '#ffd23f'], [11, '#7bd389'], [13, '#f7a1a1']];
         opts.forEach(([n, bg], i) => {
-          const b = a.put(card(n, bg, 64), 120 + i * 150, 210, 120, 110);
+          const b = a.put(card(n, bg, 64), 195 + i * 150, 200, 120, 110);
           a.tap(b, () => {
             if (n !== 11) {
               a.wrong(b);
@@ -215,7 +215,7 @@
           <rect x="22" y="34" width="156" height="36" rx="5" fill="#fff3c4" stroke-width="3"/>
           <text x="100" y="62" font-size="26" text-anchor="middle" fill="${ink}" stroke="none" font-family="Patrick Hand, cursive" font-weight="bold">MATCHES</text>`),
         380, 300, 200, 90);
-        const stick = a.put(svg('0 0 110 30', P4.stick(12, 15, 98, 15)), 425, 270, 110, 30, { z: 5 });
+        const stick = a.put(svg('0 0 110 70', P4.stick(12, 35, 98, 35)), 425, 250, 110, 70, { z: 5, cls: 'hitbox' }); // big grab area, thin stick
         const hit = (el) => {
           const S = a.box(el);
           return cells.findIndex((c) => {
@@ -224,7 +224,7 @@
           });
         };
         a.drag(stick, {
-          onTap: () => a.say('Drag me!', 480, 270),
+          onTap: () => a.say('Drag me!', 480, 255),
           onDrop(el, back) {
             const i = hit(el);
             if (i < 0) return back();

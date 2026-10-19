@@ -83,6 +83,8 @@ async function newPage(browser, url, errors) {
   const ids = levels.map((l) => l.id);
   if (new Set(ids).size !== ids.length) fail('duplicate level ids');
   if (ids[ids.length - 1] !== 'finish') fail('finale is not the last level');
+  const unordered = await page.evaluate(() => LEVELS.filter((l) => !LEVEL_ORDER.includes(l.id)).map((l) => l.id));
+  if (unordered.length) fail(`levels missing from src/levels/order.js: ${unordered.join(', ')}`);
   for (const l of levels) {
     if (!l.id || !l.hint || !l.answer) fail(`${l.id}: missing id/hint/answer`);
     if (!solutions[l.id]) fail(`${l.id}: no solution in tests/solutions/`);

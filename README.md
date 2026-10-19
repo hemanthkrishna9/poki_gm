@@ -34,16 +34,16 @@ Run all four before every upload.
 | `src/platform.js` | Ad/analytics adapter for Poki, CrazyGames, or none |
 | `src/game.js` | Engine: scaling, drag/tap helpers, hints and bulbs, save data |
 | `src/art.js` | Shared SVG art |
-| `src/levels/core.js` | Levels 1–11 |
-| `src/levels/pack2.js` · `pack3.js` · `pack4.js` | Levels 12–17 (home), 18–23 (outdoors), 24–29 (numbers and words) |
-| `src/levels/finale.js` | Level 30. Always loaded last |
+| `src/levels/core.js` · `pack2.js` · `pack3.js` · `pack4.js` | The levels: originals, home, outdoors, numbers and words |
+| `src/levels/finale.js` | Level 30 |
+| `src/levels/order.js` | Play order (easy → hard) by level id. Every level must be listed here |
 | `src/style.css` · `src/fonts/` | Styling and the bundled Patrick Hand font (OFL) |
 | `tests/` | Automated tests; `tests/solutions/` holds the winning moves for every level |
 | `build.sh` · `DEPLOY.md` · `promo/` | Builds, the platform checklist, store images |
 
 ## Adding a level
 
-Add a level object to a pack in `src/levels/` (or make a new pack file, list it in `index.html` before `finale.js`, and wrap it in `{ ... }` so its helpers don't clash with other files). Then add its winning moves to `tests/solutions/`:
+Add a level object to a pack in `src/levels/` (or make a new pack file, list it in `index.html` before `order.js`, and wrap it in `{ ... }` so its helpers don't clash with other files). Add its id to `src/levels/order.js` where it fits in the difficulty curve, and its winning moves to `tests/solutions/`:
 
 ```js
 {

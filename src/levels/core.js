@@ -37,7 +37,7 @@ const LEVELS = [
   {
     id: 'jar',
     q: ['Get the key out of the jar!'],
-    hint: 'The lid is stuck. Sometimes you just need to keep tapping.',
+    hint: 'The lid is stuck. Glass isn\'t as tough as it looks…',
     answer: 'Tap the jar until it breaks.',
     setup(a) {
       const key = a.put(ART.key(), 450, 160, 60, 120, { z: 1 });
@@ -101,23 +101,35 @@ const LEVELS = [
     },
   },
   {
-    id: 'elephant',
-    q: ['Put the elephant in the fridge.'],
-    hint: 'Step one of putting anything in a fridge…',
-    answer: 'Open the door first, then drag the elephant in.',
+    id: 'catdown',
+    q: ['Get the cat down from the tree!'],
+    hint: 'The ladder won\'t reach. What makes a cat come running?',
+    answer: 'Put the tuna can by the tree and the cat climbs down by itself.',
     setup(a) {
-      const body = a.put(ART.fridgeBody(), 620, 60, 180, 320, { z: 1 });
-      const door = a.put(ART.fridgeDoor(), 620, 60, 180, 320, { z: 2, cls: 'door' });
-      a.tap(door, () => door.classList.toggle('open'));
-      const el = a.put(ART.elephant(), 90, 200, 230, 190, { z: 5 });
-      a.drag(el, {
-        onTap: () => a.say('Pawoo!', 200, 200),
-        onDrop(e, back) {
-          if (!a.over(e, body)) return back();
-          if (!door.classList.contains('open')) { a.wrong(door); return back(); }
-          Object.assign(e.style, { transition: 'transform .4s', transform: 'scale(.5)', left: '595px', top: '140px', zIndex: 1 });
-          setTimeout(() => door.classList.remove('open'), 400);
-          a.win('Open, insert, close. Easy!');
+      a.stage.style.background = 'linear-gradient(#cdeffd 0 360px, #8fd18b 360px)';
+      const tree = a.put(ART.tree(), 520, 0, 360, 440, { z: 1 });
+      a.tap(tree, () => a.say('Rustle rustle…', 680, 200));
+      const cat = a.put(ART.cat(false), 760, 72, 110, 90, { z: 2 });
+      a.tap(cat, () => { a.wrong(cat); a.say('MEOW! (too high!)', 815, 70); });
+      const ladder = a.put(ART.ladder(), 120, 220, 90, 190, { z: 4 });
+      const can = a.put(ART.tuna(), 300, 350, 100, 70, { z: 5 });
+      const nearTree = (el) => { const b = a.box(el); return b.cx > 560 && b.cx < 900 && b.cy > 220; };
+      a.drag(ladder, {
+        onTap: () => a.say('Drag me!', 165, 220),
+        onDrop(el, back) {
+          if (nearTree(el)) { a.wrong(el); a.say('Too short!', a.box(el).cx, a.box(el).y); }
+          back();
+        },
+      });
+      a.drag(can, {
+        onTap: () => a.say('Smells fishy…', 350, 350),
+        onDrop(el) {
+          if (!nearTree(el)) return;
+          const b = a.box(el);
+          cat.innerHTML = ART.cat(true);
+          cat.style.transition = 'left .7s ease-in, top .7s ease-in';
+          Object.assign(cat.style, { left: Math.min(830, b.cx + 10) + 'px', top: b.y - 70 + 'px', zIndex: 6 });
+          a.win('Cats always come down for dinner!');
         },
       });
     },

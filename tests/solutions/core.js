@@ -7,7 +7,7 @@ module.exports = {
   jar: async (h) => { for (let i = 0; i < 4; i++) await h.tap(1); await h.wait(500); await h.tap(0); },
   snowman: async (h) => { await h.drag(0, 760, 420); },
   fastest: async (h) => { await h.tap(0); await h.tap(2); },
-  elephant: async (h) => { await h.drag(2, 700, 220); await h.wait(300); await h.tap(1); await h.drag(2, 700, 220); },
+  catdown: async (h) => { await h.tap(1); await h.drag(2, 700, 330); await h.drag(3, 640, 390); },
   heavier: async (h) => { await h.tap(1); await h.tapAt(480, 330); },
   baby: async (h) => { await h.drag(2, 700, 200); await h.wait(300); await h.drag(2, 375, 310); await h.drag(2, 700, 200); },
   light: async (h) => { await h.tap(2); await h.word('light'); },

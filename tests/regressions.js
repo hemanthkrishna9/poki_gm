@@ -61,21 +61,18 @@ const check = (name, ok, detail = '') => { if (!ok) failed++; console.log(`${ok 
   {
     const { ctx, page } = await open('web', { touch: true });
     await booted(page);
-    await page.evaluate((i) => startLevel(i), await levelIndex(page, 'elephant'));
+    await page.evaluate((i) => startLevel(i), await levelIndex(page, 'catdown'));
     await page.waitForTimeout(200);
-    const door = await center(page, 1);
-    await page.touchscreen.tap(door.x, door.y);
-    await page.waitForTimeout(500);
-    const el = await center(page, 2);
-    const before = await page.evaluate(() => document.querySelectorAll('#stage .obj')[2].style.left);
+    const can = await center(page, 3);
+    const before = await page.evaluate(() => document.querySelectorAll('#stage .obj')[3].style.left);
     const cdp = await ctx.newCDPSession(page);
     const t = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchCancel' ? [] : [{ x, y, id: 1 }] });
-    await t('touchStart', el.x, el.y);
-    for (let k = 1; k <= 10; k++) await t('touchMove', el.x + k * 50, el.y - k * 5);
+    await t('touchStart', can.x, can.y);
+    for (let k = 1; k <= 10; k++) await t('touchMove', can.x + k * 30, can.y + k * 2);
     await t('touchCancel');
     await page.waitForTimeout(400);
-    const st = await page.evaluate(() => ({ done: api.done, left: document.querySelectorAll('#stage .obj')[2].style.left }));
-    check('touch cancelled over the fridge does not win and returns the elephant', !st.done && st.left === before, JSON.stringify({ ...st, before }));
+    const st = await page.evaluate(() => ({ done: api.done, left: document.querySelectorAll('#stage .obj')[3].style.left }));
+    check('touch cancelled at the tree does not win and returns the tuna can', !st.done && st.left === before, JSON.stringify({ ...st, before }));
     await ctx.close();
   }
 

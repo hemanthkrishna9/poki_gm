@@ -1,6 +1,7 @@
 'use strict';
 
 const W = 960, H = 540; // 16:9
+const SW = 960, SH = 440; // stage
 const HINT_COST = 25, SKIP_COST = 50, REWARD = 50;
 const clearBonus = () => (Platform.hasRewarded ? 5 : 15); // no ads → earn bulbs by playing
 const $ = (s) => document.querySelector(s);
@@ -17,7 +18,7 @@ const Save = {
     if (!Number.isInteger(d.bulbs) || d.bulbs < 0) d.bulbs = 50;
     d.muted = d.muted === true;
     // v1 saves stored level indices; the first 11 levels kept their order.
-    const v1 = ['largest', 'mouse', 'jar', 'snowman', 'fastest', 'elephant', 'heavier', 'baby', 'light', 'balloons', 'six', 'finish'];
+    const v1 = ['largest', 'mouse', 'jar', 'snowman', 'fastest', 'catdown', 'heavier', 'baby', 'light', 'balloons', 'six', 'finish'];
     this.data.cleared = this.data.cleared.map((c) => (typeof c === 'number' ? v1[c] : c)).filter(Boolean);
     delete this.data.unlocked;
   },
@@ -141,6 +142,10 @@ function makeApi() {
           // cancelled by the system (call, notification shade, gesture): not a real drop
           if (ev.type === 'pointercancel') return back();
           if (!moved) { Sfx.play('tap'); if (o.onTap) o.onTap(el); return; }
+          // never let anything be dropped out of reach: keep its centre on the stage
+          const B = api.box(el);
+          el.style.left = Math.max(30, Math.min(SW - 30, B.cx)) - B.w / 2 + 'px';
+          el.style.top = Math.max(30, Math.min(SH - 30, B.cy)) - B.h / 2 + 'px';
           if (o.onDrop) o.onDrop(el, back);
         };
         el.addEventListener('pointermove', move);
@@ -234,12 +239,15 @@ function startLevel(i) {
   retireLevel();
   cur = i;
   stage.innerHTML = '';
+  stage.style.transition = 'none'; // the new level's background appears at once…
   stage.style.background = '';
   const lvl = LEVELS[i];
   $('#level-label').textContent = 'LEVEL ' + (i + 1);
   renderQuestion(lvl.q);
   api = makeApi();
   lvl.setup(api);
+  void stage.offsetWidth;
+  stage.style.transition = ''; // …but changes during the level still animate
   hide('#title'); hide('#panel');
   updateHud();
   if (!portrait.matches) Platform.start();

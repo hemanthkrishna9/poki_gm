@@ -371,7 +371,7 @@
       id: 'ketchup',
       q: ['Put ketchup on the fries.'],
       hint: 'Ever fought a ketchup bottle? Turn it the right way and be firm.',
-      answer: 'Drag the ketchup over the fries (it flips), then tap it a few times.',
+      answer: 'Drag the ketchup over the fries (it flips), then tap it 3 times.',
       setup(a) {
         a.stage.style.background = 'linear-gradient(#e0f7fa 0 316px, #c8553d 316px 324px, #ef8354 324px)';
         const fries = a.put(P2.fries(false), 250, 236, 260, 170, { z: 2 });
@@ -379,14 +379,14 @@
         const ketchup = a.put(P2.bottle('#e53935', 'KETCHUP', 17, 'sad'), 640, 86, 100, 230, { z: 3 });
         const mustard = a.put(P2.bottle('#ffca28', 'MUSTARD', 17, 'happy'), 790, 110, 90, 207, { z: 3 });
         let flipped = false, hits = 0;
-        const lines = ['Thwack!', 'Come on…', 'Almost!', 'Blorp…'];
+        const lines = ['Thwack!', 'Almost…'];
         a.drag(ketchup, {
           z: 6, keepZ: true,
           onTap(el) {
             el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
             if (!flipped) return a.say('Nothing comes out…', 690, 86);
             hits++;
-            if (hits < 5) return a.say(lines[hits - 1], 530, 100);
+            if (hits < 3) return a.say(lines[hits - 1], 530, 100);
             fries.innerHTML = P2.fries(true);
             Object.assign(el.style, { transition: 'left .4s, top .4s, transform .4s', left: '560px', top: '86px', transform: 'rotate(0deg)' });
             el.innerHTML = P2.bottle('#e53935', 'KETCHUP', 17, 'happy');
@@ -419,13 +419,6 @@
       setup(a) {
         a.stage.style.background = 'linear-gradient(#f6e3c6 0 340px, #8a6448 340px 346px, #a3785a 346px)';
         a.put(P2.sideTable(), 70, 256, 150, 130, { z: 1 });
-        const clock = a.put(P2.alarm(false), 90, 150, 110, 120, { z: 2 });
-        a.tap(clock, () => {
-          clock.innerHTML = P2.alarm(true);
-          a.wrong(clock);
-          a.say('RIIING!', 145, 150);
-          setTimeout(() => { clock.innerHTML = P2.alarm(false); a.say('Zzz…', 470, 120); }, 700);
-        });
         const gramps = a.put(P2.sofa(false), 270, 120, 380, 270, { z: 2 });
         a.tap(gramps, () => { a.wrong(gramps); a.say('Snrrk… 5 more mins…', 460, 130); });
         const tv = a.put(P2.tv(true), 710, 128, 200, 260, { z: 2 });
