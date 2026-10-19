@@ -1,17 +1,25 @@
 'use strict';
 
 const W = 960, H = 640;
-const HINT_COST = 25, SKIP_COST = 50, REWARD = 50, CLEAR_BONUS = 5;
+const HINT_COST = 25, SKIP_COST = 50, REWARD = 50;
+const CLEAR_BONUS = Platform.hasRewarded ? 5 : 15; // no ads → earn bulbs by playing
 const $ = (s) => document.querySelector(s);
 const stage = $('#stage');
 let scale = 1;
 
 // ---------- persistence ----------
 const Save = {
-  data: { unlocked: 1, cleared: [], bulbs: 50, muted: false },
+  data: { cleared: [], bulbs: 50, muted: false }, // cleared holds level ids
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem('trickytaps') || '{}')); } catch (e) {}
+    if (!Array.isArray(this.data.cleared)) this.data.cleared = [];
+    // v1 saves stored level indices; the first 11 levels kept their order.
+    const v1 = ['largest', 'mouse', 'jar', 'snowman', 'fastest', 'elephant', 'heavier', 'baby', 'light', 'balloons', 'six', 'finish'];
+    this.data.cleared = this.data.cleared.map((c) => (typeof c === 'number' ? v1[c] : c)).filter(Boolean);
+    delete this.data.unlocked;
   },
+  isCleared(i) { return this.data.cleared.includes(LEVELS[i].id); },
+  isUnlocked(i) { return i === 0 || this.isCleared(i) || this.isCleared(i - 1); },
   save() {
     try { localStorage.setItem('trickytaps', JSON.stringify(this.data)); } catch (e) {}
   },
@@ -47,46 +55,7 @@ const Sfx = {
   },
 };
 
-// ---------- Poki SDK wrapper (no-ops when the SDK is absent, e.g. local dev) ----------
-const Poki = {
-  playing: false,
-  sdk() { return window.PokiSDK; },
-  async init() {
-    const s = this.sdk();
-    if (!s) return;
-    try { await s.init(); } catch (e) { /* adblock etc. — game must still work */ }
-    if (location.hostname === 'localhost' || location.protocol === 'file:') {
-      try { s.setDebug(true); } catch (e) {}
-    }
-  },
-  loaded() { try { this.sdk()?.gameLoadingFinished(); } catch (e) {} },
-  start() {
-    if (this.playing) return;
-    this.playing = true;
-    try { this.sdk()?.gameplayStart(); } catch (e) {}
-  },
-  stop() {
-    if (!this.playing) return;
-    this.playing = false;
-    try { this.sdk()?.gameplayStop(); } catch (e) {}
-  },
-  async commercial() {
-    const s = this.sdk();
-    if (!s) return;
-    Sfx.muted = true;
-    try { await s.commercialBreak(); } catch (e) {}
-    Sfx.muted = false;
-  },
-  async rewarded() {
-    const s = this.sdk();
-    if (!s) return true; // local dev: pretend the ad was watched
-    Sfx.muted = true;
-    let ok = false;
-    try { ok = await s.rewardedBreak(); } catch (e) {}
-    Sfx.muted = false;
-    return ok;
-  },
-};
+Platform.onAdMute = (m) => { Sfx.muted = m; };
 
 // ---------- layout ----------
 function fit() {
@@ -244,16 +213,15 @@ function startLevel(i) {
   lvl.setup(api);
   hide('#title'); hide('#panel');
   updateHud();
-  Poki.start();
+  Platform.start();
 }
 
 function winLevel(msg) {
   Sfx.play('win');
-  Poki.stop();
+  Platform.stop();
   mark('✓', 'good', 480, 220);
   const d = Save.data;
-  if (!d.cleared.includes(cur)) { d.cleared.push(cur); d.bulbs += CLEAR_BONUS; }
-  d.unlocked = Math.max(d.unlocked, Math.min(cur + 2, LEVELS.length));
+  if (!Save.isCleared(cur)) { d.cleared.push(LEVELS[cur].id); d.bulbs += CLEAR_BONUS; }
   Save.save();
   updateHud();
   setTimeout(() => {
@@ -262,7 +230,7 @@ function winLevel(msg) {
       last ? 'MENU' : 'NEXT', async () => {
         hide('#panel');
         if (last) return showTitle();
-        await Poki.commercial();
+        await Platform.commercial();
         startLevel(cur + 1);
       });
   }, 1100);
@@ -278,14 +246,14 @@ function showPanel(title, text, btn, fn) {
 }
 
 function showTitle() {
-  Poki.stop();
+  Platform.stop();
   const grid = $('#level-grid');
   grid.innerHTML = '';
   LEVELS.forEach((_, i) => {
     const b = document.createElement('button');
     b.textContent = i + 1;
-    b.disabled = i >= Save.data.unlocked;
-    if (Save.data.cleared.includes(i)) b.classList.add('done');
+    b.disabled = !Save.isUnlocked(i);
+    if (Save.isCleared(i)) b.classList.add('done');
     b.onclick = () => startLevel(i);
     grid.appendChild(b);
   });
@@ -300,12 +268,12 @@ function updateHud() {
 const show = (s) => $(s).classList.remove('hidden');
 const hide = (s) => $(s).classList.add('hidden');
 
-function resume() { hide('#panel'); if (!api.done) Poki.start(); }
+function resume() { hide('#panel'); if (!api.done) Platform.start(); }
 
 // ---------- buttons ----------
 $('#btn-play').onclick = () => {
-  const next = Math.min(Save.data.unlocked, LEVELS.length) - 1;
-  startLevel(next);
+  const next = LEVELS.findIndex((_, i) => !Save.isCleared(i));
+  startLevel(next < 0 ? 0 : next);
 };
 $('#btn-home').onclick = showTitle;
 $('#btn-sound').onclick = () => { Save.data.muted = !Save.data.muted; Save.save(); updateHud(); };
@@ -318,7 +286,7 @@ $('#btn-hint').onclick = () => {
     hintBought[cur] = true;
     Save.save(); updateHud();
   }
-  Poki.stop();
+  Platform.stop();
   showPanel('Hint', LEVELS[cur].hint, 'OK', resume);
 };
 
@@ -331,10 +299,9 @@ $('#btn-skip').onclick = () => {
 };
 
 $('#btn-reward').onclick = async () => {
-  Poki.stop();
-  const ok = await Poki.rewarded();
+  const ok = await Platform.rewarded();
   if (ok) { Save.data.bulbs += REWARD; Save.save(); updateHud(); }
-  if (api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden')) Poki.start();
+  if (api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden')) Platform.start();
 };
 
 // stop the page from scrolling / zooming while playing on mobile
@@ -346,8 +313,9 @@ addEventListener('resize', fit);
 (async function boot() {
   Save.load();
   fit();
-  await Poki.init();
+  await Platform.init();
+  if (!Platform.hasRewarded) hide('#btn-reward');
   updateHud();
   showTitle();
-  Poki.loaded();
+  Platform.loaded();
 })();

@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Tricky Taps</title>
   <link rel="stylesheet" href="src/style.css">
+  <!-- PLATFORM:BEGIN (build.sh rewrites this block per target) -->
+  <script>window.PLATFORM = 'poki';</script>
   <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+  <!-- PLATFORM:END -->
 </head>
 <body>
   <div id="app">
@@ -38,7 +41,21 @@
       </div>
     </div>
   </div>
-  <script src="src/levels.js"></script>
+
+  <div id="rotate">
+    <div class="phone">📱</div>
+    <p>Turn your device sideways to play!</p>
+  </div>
+
+  <script src="src/platform.js"></script>
+  <script src="src/art.js"></script>
+  <!-- LEVELS:BEGIN — level packs, in play order; finale.js must be last -->
+  <script src="src/levels/core.js"></script>
+  <script src="src/levels/pack2.js"></script>
+  <script src="src/levels/pack3.js"></script>
+  <script src="src/levels/pack4.js"></script>
+  <script src="src/levels/finale.js"></script>
+  <!-- LEVELS:END -->
   <script src="src/game.js"></script>
 </body>
 </html>
