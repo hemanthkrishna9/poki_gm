@@ -63,10 +63,11 @@ const Platform = (() => {
           const s = this.sdk();
           if (!s) return done(false);
           // safety net: never leave the game stuck if the SDK never calls back
-          const timer = setTimeout(() => done(false), 90000);
+          const timer = setTimeout(() => done(false), 30000);
           const end = (ok) => { clearTimeout(timer); done(ok); };
           try {
-            s.ad.requestAd(type, { adStarted() {}, adFinished: () => end(true), adError: () => end(false) });
+            // the timeout only covers an ad that never starts; once it plays, wait for its real end
+            s.ad.requestAd(type, { adStarted: () => clearTimeout(timer), adFinished: () => end(true), adError: () => end(false) });
           } catch (e) { end(false); }
         });
       },

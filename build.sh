@@ -21,18 +21,21 @@ block_for() {
   esac
 }
 
+grep -q 'PLATFORM:END' index.html || { echo "index.html: PLATFORM:END marker missing" >&2; exit 1; }
+
 for t in "${targets[@]}"; do
+  block="$(block_for "$t")" # validates the target before touching dist/
   out="$DIST/$t"
   rm -rf "$out" "$DIST/tricky-taps-$t.zip"
   mkdir -p "$out"
   cp -r src "$out/"
-  block="$(block_for "$t")"
   # swap everything between the PLATFORM markers for this target's block
   awk -v block="$block" '
     /PLATFORM:BEGIN/ { print; print block; skip = 1; next }
     /PLATFORM:END/   { skip = 0 }
     !skip
   ' index.html > "$out/index.html"
-  (cd "$out" && zip -qr "../tricky-taps-$t.zip" .)
+  grep -q 'src/game.js' "$out/index.html" || { echo "$t: broken index.html" >&2; exit 1; }
+  (cd "$out" && zip -qr "../tricky-taps-$t.zip" . -x '*.DS_Store' '*~' '*.swp')
   echo "built $DIST/tricky-taps-$t.zip ($(du -h "$DIST/tricky-taps-$t.zip" | cut -f1))"
 done

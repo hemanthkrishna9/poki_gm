@@ -223,7 +223,7 @@ const LEVELS = [
       six.addEventListener('pointerdown', (e) => {
         if (a.done) return;
         e.preventDefault();
-        six.setPointerCapture(e.pointerId);
+        try { six.setPointerCapture(e.pointerId); } catch (err) {}
         const x0 = e.clientX, a0 = angle;
         let moved = false;
         const move = (ev) => {
@@ -232,9 +232,11 @@ const LEVELS = [
           angle = a0 + dx;
           six.style.transform = `rotate(${angle}deg)`;
         };
-        const up = () => {
+        const up = (ev) => {
           six.removeEventListener('pointermove', move);
           six.removeEventListener('pointerup', up);
+          six.removeEventListener('pointercancel', up);
+          if (a.done || ev.type === 'pointercancel') return;
           if (!moved) return a.wrong(six);
           const n = ((angle % 360) + 360) % 360;
           if (n > 150 && n < 210) {
@@ -245,6 +247,7 @@ const LEVELS = [
         };
         six.addEventListener('pointermove', move);
         six.addEventListener('pointerup', up);
+        six.addEventListener('pointercancel', up);
       });
     },
   },

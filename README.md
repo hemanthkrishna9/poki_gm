@@ -21,9 +21,10 @@ On `localhost` the Poki SDK runs in debug mode and shows a placeholder ad betwee
 npm test                    # solves all 30 levels + a full playthrough (tests/run.js)
 node tests/requirements.js  # 25 Poki / CrazyGames / web / mobile / robustness requirements (~4 min)
 node tests/abuse.js         # tries to break every level (softlocks, random tapping, leftovers)
+node tests/regressions.js   # bugs found in code review must stay fixed
 ```
 
-Run all three before every upload.
+Run all four before every upload.
 
 ## Files
 

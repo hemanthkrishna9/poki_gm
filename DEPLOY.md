@@ -8,7 +8,7 @@
 | `tricky-taps-crazygames.zip` | CrazyGames developer portal | CrazyGames SDK v3 (`requestAd('midgame' / 'rewarded')`) |
 | `tricky-taps-web.zip` | itch.io, Newgrounds, GitHub Pages, your own site | None. The 🎬 button is hidden and each clear gives 15 💡 instead of 5. |
 
-Before every upload, run `npm test`, `node tests/requirements.js` and `node tests/abuse.js`. All three must pass.
+Before every upload, run `npm test`, `node tests/requirements.js`, `node tests/abuse.js` and `node tests/regressions.js`. All four must pass.
 
 Store images are in `promo/`. Regenerate them with `node promo/make.js`.
 

@@ -43,6 +43,7 @@ const Sfx = {
     try {
       this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)();
       const c = this.ctx;
+      if (c.state !== 'running') c.resume(); // iOS suspends audio after calls/backgrounding
       let t = c.currentTime;
       for (const [f, d] of this.tunes[name]) {
         const o = c.createOscillator(), g = c.createGain();
@@ -70,8 +71,7 @@ function fit() {
   $('#app').style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
-function toStage(e) {
-  const r = stage.getBoundingClientRect();
+function toStage(e, r = stage.getBoundingClientRect()) {
   return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
 }
 
@@ -105,30 +105,41 @@ function makeApi() {
     // onDrop(el, back) — call back() to return the element to where the drag started.
     drag(el, o = {}) {
       el.classList.add('drag');
+      let active = false; // one finger at a time
       el.addEventListener('pointerdown', (e) => {
-        if (api.done) return;
+        if (api.done || active) return;
+        active = true;
         e.preventDefault(); e.stopPropagation();
-        const p0 = toStage(e);
+        const rect = stage.getBoundingClientRect(); // read once: no layout per move
+        const p0 = toStage(e, rect);
         const ox = parseFloat(el.style.left), oy = parseFloat(el.style.top);
         const oz = el.style.zIndex;
+        const tr = el.style.transition;
+        el.style.transition = 'none'; // follow the finger exactly, even if the level animates left/top
         let moved = false;
-        el.setPointerCapture(e.pointerId);
+        try { el.setPointerCapture(e.pointerId); } catch (err) {}
         el.style.zIndex = o.z || 60;
         const move = (ev) => {
-          const p = toStage(ev);
+          if (ev.pointerId !== e.pointerId) return;
+          const p = toStage(ev, rect);
           const dx = p.x - p0.x, dy = p.y - p0.y;
           if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
           el.style.left = ox + dx + 'px';
           el.style.top = oy + dy + 'px';
           if (o.onMove && !api.done) o.onMove(el);
         };
-        const up = () => {
+        const up = (ev) => {
+          if (ev.pointerId !== e.pointerId) return;
+          active = false;
           el.removeEventListener('pointermove', move);
           el.removeEventListener('pointerup', up);
           el.removeEventListener('pointercancel', up);
+          el.style.transition = tr;
           el.style.zIndex = o.keepZ ? el.style.zIndex : oz;
           const back = () => { el.style.left = ox + 'px'; el.style.top = oy + 'px'; };
           if (api.done) return;
+          // cancelled by the system (call, notification shade, gesture): not a real drop
+          if (ev.type === 'pointercancel') return back();
           if (!moved) { Sfx.play('tap'); if (o.onTap) o.onTap(el); return; }
           if (o.onDrop) o.onDrop(el, back);
         };
@@ -154,9 +165,10 @@ function makeApi() {
     },
 
     wrong(el) {
+      if (api.retired) return;
       Sfx.play('wrong');
       let x = 480, y = 220;
-      if (el && el.style && el.style.left) ({ cx: x, cy: y } = api.box(el));
+      if (el && el.style && el.style.left !== '' && el.style.left !== undefined) ({ cx: x, cy: y } = api.box(el));
       mark('✗', 'bad', x, y);
       if (el && el.classList) {
         el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
@@ -164,6 +176,7 @@ function makeApi() {
     },
 
     say(text, x, y) {
+      if (api.retired) return;
       const b = document.createElement('div');
       b.className = 'bubble';
       b.textContent = text;
@@ -209,9 +222,16 @@ function renderQuestion(q) {
   }
 }
 
+// The level being left can still have timers running (animations, delayed effects).
+// Retiring its api makes them harmless: win() is ignored once done, say()/wrong() once retired.
+function retireLevel() {
+  if (api) { api.done = true; api.retired = true; }
+  clearTimeout(winTimer);
+}
+
 function startLevel(i) {
   if (Platform.adShowing) return;
-  clearTimeout(winTimer);
+  retireLevel();
   cur = i;
   stage.innerHTML = '';
   stage.style.background = '';
@@ -222,7 +242,7 @@ function startLevel(i) {
   lvl.setup(api);
   hide('#title'); hide('#panel');
   updateHud();
-  Platform.start();
+  if (!portrait.matches) Platform.start();
 }
 
 function winLevel(msg) {
@@ -233,7 +253,9 @@ function winLevel(msg) {
   if (!Save.isCleared(cur)) { d.cleared.push(LEVELS[cur].id); d.bulbs += clearBonus(); }
   Save.save();
   updateHud();
+  const winApi = api;
   winTimer = setTimeout(() => {
+    if (winApi !== api) return;
     const last = cur === LEVELS.length - 1;
     showPanel(last ? 'You did it!' : 'Brilliant!', last ? 'You beat every tricky level. More coming soon!' : msg,
       last ? 'MENU' : 'NEXT', async () => {
@@ -256,7 +278,7 @@ function showPanel(title, text, btn, fn) {
 
 function showTitle() {
   if (Platform.adShowing) return;
-  clearTimeout(winTimer);
+  retireLevel();
   hide('#panel');
   Platform.stop();
   const grid = $('#level-grid');
@@ -297,10 +319,10 @@ $('#btn-sound').onclick = () => { Save.data.muted = !Save.data.muted; Save.save(
 
 $('#btn-hint').onclick = () => {
   if (api.done) return;
-  if (!hintBought[cur]) {
+  if (!hintBought[LEVELS[cur].id]) {
     if (Save.data.bulbs < HINT_COST) return outOfBulbs();
     Save.data.bulbs -= HINT_COST;
-    hintBought[cur] = true;
+    hintBought[LEVELS[cur].id] = true;
     Save.save(); updateHud();
   }
   Platform.stop();
@@ -319,6 +341,8 @@ $('#btn-reward').onclick = async () => {
   if (Platform.adShowing) return;
   const ok = await Platform.rewarded();
   if (ok) { Save.data.bulbs += REWARD; Save.save(); updateHud(); }
+  const playing = api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden');
+  if (playing) api.say(ok ? `+${REWARD} 💡  Thanks!` : 'No video available right now', 480, 60);
   if (api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden')) Platform.start();
 };
 
@@ -332,10 +356,17 @@ addEventListener('keydown', (e) => { if (SCROLL_KEYS.includes(e.key)) e.preventD
 addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
 addEventListener('resize', fit);
 
+// Phones held upright see the "rotate" screen: that's an interruption, so pause gameplay.
+const portrait = matchMedia('(orientation: portrait) and (pointer: coarse)');
+const inLevel = () => api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden');
+const onOrientation = () => { if (portrait.matches) Platform.stop(); else if (inLevel()) Platform.start(); };
+portrait.addEventListener ? portrait.addEventListener('change', onOrientation) : portrait.addListener(onOrientation);
+
 (async function boot() {
   Save.load();
   fit();
-  await Platform.init(); // #title starts hidden so nothing is playable before this
+  // #title starts hidden so nothing is playable before init; don't wait forever on a stuck SDK
+  await Promise.race([Platform.init(), new Promise((r) => setTimeout(r, 6000))]);
   if (!Platform.hasRewarded) hide('#btn-reward');
   updateHud();
   showTitle();
