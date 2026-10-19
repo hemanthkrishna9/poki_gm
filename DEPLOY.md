@@ -44,6 +44,7 @@ The docs are at https://docs.crazygames.com.
 ## Other sites (web build)
 
 - **itch.io:** create a new project → Kind: HTML → upload `tricky-taps-web.zip` → tick "This file will be played in the browser" → set the viewport to 960×540 and enable the fullscreen button.
+- **Single file:** `node tools/single-file.js` bundles the web build into one self-contained `dist/tricky-taps.html` (CSS, JS and font inlined). Handy for hosts that take one HTML file.
 - **GitHub Pages / your own host:** unzip `tricky-taps-web.zip` and upload its contents. The game is plain static files, so any static host works.
 - **Ad networks with their own SDK** (e.g. GameDistribution): add an adapter to `src/platform.js` and a target to `build.sh`, the same way the CrazyGames one is done.
 
