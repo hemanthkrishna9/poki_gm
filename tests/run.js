@@ -67,8 +67,9 @@ async function newPage(browser, url, errors) {
 
 (async () => {
   const only = process.argv.slice(2);
-  execSync('./build.sh web', { cwd: ROOT, stdio: 'ignore' });
-  const srv = await serve(path.join(ROOT, 'dist', 'web'));
+  const dist = fs.mkdtempSync(path.join(require('os').tmpdir(), 'tt-run-'));
+  execSync('./build.sh web', { cwd: ROOT, stdio: 'ignore', env: { ...process.env, DIST: dist } });
+  const srv = await serve(path.join(dist, 'web'));
   const url = `http://localhost:${srv.address().port}/index.html`;
   const browser = await chromium.launch();
   let failed = 0;
@@ -131,6 +132,7 @@ async function newPage(browser, url, errors) {
 
   await browser.close();
   srv.close();
+  fs.rmSync(dist, { recursive: true, force: true });
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASSED');
   process.exit(failed ? 1 : 0);
 })();

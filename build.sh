@@ -5,6 +5,7 @@
 # Targets: poki, crazygames, web (no SDK/ads — itch.io, Newgrounds, your own site)
 set -euo pipefail
 cd "$(dirname "$0")"
+DIST="${DIST:-dist}" # tests build into their own dir so parallel runs don't clash
 
 targets=("$@")
 [ ${#targets[@]} -eq 0 ] && targets=(poki crazygames web)
@@ -20,9 +21,9 @@ block_for() {
   esac
 }
 
-rm -rf dist
 for t in "${targets[@]}"; do
-  out="dist/$t"
+  out="$DIST/$t"
+  rm -rf "$out" "$DIST/tricky-taps-$t.zip"
   mkdir -p "$out"
   cp -r src "$out/"
   block="$(block_for "$t")"
@@ -33,5 +34,5 @@ for t in "${targets[@]}"; do
     !skip
   ' index.html > "$out/index.html"
   (cd "$out" && zip -qr "../tricky-taps-$t.zip" .)
-  echo "built dist/tricky-taps-$t.zip ($(du -h "dist/tricky-taps-$t.zip" | cut -f1))"
+  echo "built $DIST/tricky-taps-$t.zip ($(du -h "$DIST/tricky-taps-$t.zip" | cut -f1))"
 done
