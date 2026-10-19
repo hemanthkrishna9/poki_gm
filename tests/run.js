@@ -55,7 +55,7 @@ function helper(page) {
 }
 
 async function newPage(browser, url, errors) {
-  const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
+  const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/POKI|Blocked script|Cross-Origin/.test(m.text())) errors.push(m.text()); });
   await page.goto(url);

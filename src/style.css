@@ -14,28 +14,33 @@ html, body {
 }
 button { font-family: inherit; cursor: pointer; color: inherit; }
 
-/* 960x640 logical canvas, scaled to fit the window by game.js */
+/* 960x540 (16:9) logical canvas, scaled to fit the window by game.js.
+   Layout: 50px top bar · 440px stage · 50px bottom bar */
 #app {
   position: absolute; left: 50%; top: 50%;
-  width: 960px; height: 640px;
+  width: 960px; height: 540px;
   transform-origin: center;
-  background: #fffdf7 repeating-linear-gradient(#fffdf7 0 38px, #cfe3f0 38px 40px);
+  background: #fffdf7 repeating-linear-gradient(#fffdf7 0 48px, #cfe3f0 48px 50px);
   border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
   overflow: hidden;
 }
 
-#hud { position: absolute; top: 0; left: 0; right: 0; height: 70px; display: flex; align-items: center; justify-content: center; gap: 14px; }
-.round { width: 46px; height: 46px; border-radius: 50%; border: 3px solid #2b2b2b; background: #ffd23f; font-size: 22px; font-weight: bold; }
+#hud { position: absolute; top: 0; left: 0; right: 0; height: 50px; }
+#btn-home { position: absolute; left: 10px; top: 5px; }
+#btn-sound { position: absolute; left: 60px; top: 5px; }
+#level-label { position: absolute; right: 112px; top: 0; line-height: 50px; }
+#bulbs { position: absolute; right: 10px; top: 7px; }
+.round { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #2b2b2b; background: #ffd23f; font-size: 22px; font-weight: bold; }
 .round.off { background: #ccc; text-decoration: line-through; }
-#level-label { font-size: 30px; font-weight: bold; min-width: 150px; text-align: center; }
-#bulbs { border: 3px solid #2b2b2b; border-radius: 30px; padding: 4px 16px; font-size: 22px; font-weight: bold; background: #fff; }
+#level-label { font-size: 26px; font-weight: bold; }
+#bulbs { border: 3px solid #2b2b2b; border-radius: 30px; padding: 1px 14px; font-size: 20px; font-weight: bold; background: #fff; }
 
-#question { position: absolute; top: 70px; left: 0; right: 0; height: 50px; text-align: center; font-size: 28px; line-height: 50px; }
+#question { position: absolute; top: 0; left: 115px; right: 245px; height: 50px; text-align: center; font-size: 26px; line-height: 50px; white-space: nowrap; }
 #question .w { cursor: pointer; display: inline-block; }
 #question .w.popped { visibility: hidden; }
 #question .w.glow { color: #e6a800; text-shadow: 0 0 12px #ffd23f; }
 
-#stage { position: absolute; top: 120px; left: 0; width: 960px; height: 440px; overflow: hidden; transition: background 1s; }
+#stage { position: absolute; top: 50px; left: 0; width: 960px; height: 440px; overflow: hidden; transition: background 1s; }
 .obj { position: absolute; transition: transform .15s; }
 .obj svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .obj.drag { cursor: grab; touch-action: none; }
@@ -50,22 +55,24 @@ button { font-family: inherit; cursor: pointer; color: inherit; }
 @keyframes pop { 0% { scale: .2; opacity: 0 } 60% { scale: 1.15; opacity: 1 } 100% { scale: 1 } }
 .bubble { position: absolute; z-index: 998; background: #fff; border: 3px solid #2b2b2b; border-radius: 16px; padding: 6px 14px; font-size: 22px; pointer-events: none; transform: translate(-50%, -100%); animation: fade 1.4s forwards; }
 
-#bar { position: absolute; bottom: 0; left: 0; right: 0; height: 80px; display: flex; align-items: center; justify-content: center; gap: 22px; }
-.pill { border: 3px solid #2b2b2b; border-radius: 30px; background: #9fe0f5; font-size: 22px; padding: 8px 20px; font-weight: bold; }
+#bar { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; display: flex; align-items: center; justify-content: center; gap: 22px; }
+.pill { border: 3px solid #2b2b2b; border-radius: 30px; background: #9fe0f5; font-size: 19px; padding: 3px 18px; font-weight: bold; }
 .pill small { font-size: 15px; opacity: .7; }
 .pill.reward { background: #f7a1a1; }
 
 .screen { position: absolute; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,253,247,.97); }
-.screen.hidden { display: none; }
+.hidden, .screen.hidden { display: none !important; }
+/* an ad is showing: swallow every click until it's over */
+body.ad-showing * { pointer-events: none !important; }
 #panel { background: rgba(0,0,0,.45); }
 .card { background: #fffdf7; border: 4px solid #2b2b2b; border-radius: 20px; padding: 24px 40px; text-align: center; max-width: 520px; }
 .card h2 { margin: 0 0 8px; font-size: 40px; }
 .card p { font-size: 24px; margin: 0 0 20px; }
-h1 { font-size: 84px; margin: 0; letter-spacing: 2px; transform: rotate(-3deg); text-shadow: 4px 4px 0 #ffd23f; }
+h1 { font-size: 80px; margin: 0; letter-spacing: 2px; transform: rotate(-3deg); text-shadow: 4px 4px 0 #ffd23f; }
 .tag { font-size: 26px; margin: 4px 0 24px; }
 .big { border: 4px solid #2b2b2b; border-radius: 40px; background: #7bd389; font-size: 34px; font-weight: bold; padding: 10px 50px; }
-#level-grid { display: grid; grid-template-columns: repeat(10, 58px); gap: 10px; margin-top: 26px; }
-#level-grid button { height: 58px; border: 3px solid #2b2b2b; border-radius: 14px; background: #ffd23f; font-size: 26px; font-weight: bold; }
+#level-grid { display: grid; grid-template-columns: repeat(10, 56px); gap: 10px; margin-top: 22px; }
+#level-grid button { height: 56px; border: 3px solid #2b2b2b; border-radius: 14px; background: #ffd23f; font-size: 26px; font-weight: bold; }
 #level-grid button.done { background: #7bd389; }
 #level-grid button:disabled { background: #ddd; color: #999; cursor: default; }
 

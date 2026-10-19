@@ -1,8 +1,8 @@
 'use strict';
 
-const W = 960, H = 640;
+const W = 960, H = 540; // 16:9
 const HINT_COST = 25, SKIP_COST = 50, REWARD = 50;
-const CLEAR_BONUS = Platform.hasRewarded ? 5 : 15; // no ads → earn bulbs by playing
+const clearBonus = () => (Platform.hasRewarded ? 5 : 15); // no ads → earn bulbs by playing
 const $ = (s) => document.querySelector(s);
 const stage = $('#stage');
 let scale = 1;
@@ -12,7 +12,10 @@ const Save = {
   data: { cleared: [], bulbs: 50, muted: false }, // cleared holds level ids
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem('trickytaps') || '{}')); } catch (e) {}
-    if (!Array.isArray(this.data.cleared)) this.data.cleared = [];
+    const d = this.data;
+    if (!Array.isArray(d.cleared)) d.cleared = [];
+    if (!Number.isInteger(d.bulbs) || d.bulbs < 0) d.bulbs = 50;
+    d.muted = d.muted === true;
     // v1 saves stored level indices; the first 11 levels kept their order.
     const v1 = ['largest', 'mouse', 'jar', 'snowman', 'fastest', 'elephant', 'heavier', 'baby', 'light', 'balloons', 'six', 'finish'];
     this.data.cleared = this.data.cleared.map((c) => (typeof c === 'number' ? v1[c] : c)).filter(Boolean);
@@ -55,7 +58,11 @@ const Sfx = {
   },
 };
 
-Platform.onAdMute = (m) => { Sfx.muted = m; };
+// While an ad shows: mute, and block every click until it's over.
+Platform.onAd = (on) => {
+  Sfx.muted = on;
+  document.body.classList.toggle('ad-showing', on);
+};
 
 // ---------- layout ----------
 function fit() {
@@ -184,7 +191,7 @@ function mark(ch, cls, x, y) {
 }
 
 // ---------- game flow ----------
-let cur = 0, api = null, hintBought = {};
+let cur = 0, api = null, hintBought = {}, winTimer = 0;
 
 function renderQuestion(q) {
   const el = $('#question');
@@ -203,6 +210,8 @@ function renderQuestion(q) {
 }
 
 function startLevel(i) {
+  if (Platform.adShowing) return;
+  clearTimeout(winTimer);
   cur = i;
   stage.innerHTML = '';
   stage.style.background = '';
@@ -221,10 +230,10 @@ function winLevel(msg) {
   Platform.stop();
   mark('✓', 'good', 480, 220);
   const d = Save.data;
-  if (!Save.isCleared(cur)) { d.cleared.push(LEVELS[cur].id); d.bulbs += CLEAR_BONUS; }
+  if (!Save.isCleared(cur)) { d.cleared.push(LEVELS[cur].id); d.bulbs += clearBonus(); }
   Save.save();
   updateHud();
-  setTimeout(() => {
+  winTimer = setTimeout(() => {
     const last = cur === LEVELS.length - 1;
     showPanel(last ? 'You did it!' : 'Brilliant!', last ? 'You beat every tricky level. More coming soon!' : msg,
       last ? 'MENU' : 'NEXT', async () => {
@@ -241,11 +250,14 @@ function showPanel(title, text, btn, fn) {
   $('#panel-text').textContent = text;
   const b = $('#panel-btn');
   b.textContent = btn;
-  b.onclick = fn;
+  b.onclick = () => { b.onclick = null; fn(); }; // one-shot: a double tap can't fire it twice
   show('#panel');
 }
 
 function showTitle() {
+  if (Platform.adShowing) return;
+  clearTimeout(winTimer);
+  hide('#panel');
   Platform.stop();
   const grid = $('#level-grid');
   grid.innerHTML = '';
@@ -270,6 +282,11 @@ const hide = (s) => $(s).classList.add('hidden');
 
 function resume() { hide('#panel'); if (!api.done) Platform.start(); }
 
+function outOfBulbs() {
+  Platform.stop();
+  showPanel('Out of bulbs', Platform.hasRewarded ? 'Watch an ad to get more 💡' : 'Solve more levels to earn 💡', 'OK', resume);
+}
+
 // ---------- buttons ----------
 $('#btn-play').onclick = () => {
   const next = LEVELS.findIndex((_, i) => !Save.isCleared(i));
@@ -281,7 +298,7 @@ $('#btn-sound').onclick = () => { Save.data.muted = !Save.data.muted; Save.save(
 $('#btn-hint').onclick = () => {
   if (api.done) return;
   if (!hintBought[cur]) {
-    if (Save.data.bulbs < HINT_COST) return showPanel('Out of bulbs', 'Watch an ad to get more 💡', 'OK', resume);
+    if (Save.data.bulbs < HINT_COST) return outOfBulbs();
     Save.data.bulbs -= HINT_COST;
     hintBought[cur] = true;
     Save.save(); updateHud();
@@ -292,28 +309,33 @@ $('#btn-hint').onclick = () => {
 
 $('#btn-skip').onclick = () => {
   if (api.done) return;
-  if (Save.data.bulbs < SKIP_COST) return showPanel('Out of bulbs', 'Watch an ad to get more 💡', 'OK', resume);
+  if (Save.data.bulbs < SKIP_COST) return outOfBulbs();
   Save.data.bulbs -= SKIP_COST;
   Save.save();
   api.win('Skipped! ' + LEVELS[cur].answer);
 };
 
 $('#btn-reward').onclick = async () => {
+  if (Platform.adShowing) return;
   const ok = await Platform.rewarded();
   if (ok) { Save.data.bulbs += REWARD; Save.save(); updateHud(); }
   if (api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden')) Platform.start();
 };
 
 // stop the page from scrolling / zooming while playing on mobile
-['touchmove', 'gesturestart', 'contextmenu'].forEach((ev) =>
+// (and never scroll the portal page around the game's iframe)
+['touchmove', 'gesturestart', 'contextmenu', 'wheel'].forEach((ev) =>
   document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
-addEventListener('keydown', (e) => { if ([' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault(); });
+const SCROLL_KEYS = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'];
+addEventListener('keydown', (e) => { if (SCROLL_KEYS.includes(e.key)) e.preventDefault(); });
+// don't leave buttons focused, or Space would press them again (e.g. start another ad)
+addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
 addEventListener('resize', fit);
 
 (async function boot() {
   Save.load();
   fit();
-  await Platform.init();
+  await Platform.init(); // #title starts hidden so nothing is playable before this
   if (!Platform.hasRewarded) hide('#btn-reward');
   updateHud();
   showTitle();

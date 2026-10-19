@@ -25,9 +25,11 @@ const Platform = (() => {
       sdk: () => window.PokiSDK,
       async init() {
         const s = this.sdk();
-        if (!s) return;
-        try { await s.init(); } catch (e) { /* adblock — game must still work */ }
+        if (!s) return false;
+        let ok = true;
+        try { await s.init(); } catch (e) { ok = false; /* adblock — game must still work */ }
         if (location.hostname === 'localhost' || location.protocol === 'file:') safe(() => s.setDebug(true));
+        return ok;
       },
       loaded() { safe(() => this.sdk()?.gameLoadingFinished()); },
       start() { safe(() => this.sdk()?.gameplayStart()); },
@@ -48,8 +50,10 @@ const Platform = (() => {
       sdk: () => window.CrazyGames?.SDK,
       async init() {
         const s = this.sdk();
-        if (!s) return;
-        try { await s.init(); safe(() => s.game.loadingStart()); } catch (e) {}
+        if (!s) return false;
+        try { await s.init(); } catch (e) { return false; }
+        safe(() => s.game.loadingStart());
+        return true;
       },
       loaded() { safe(() => this.sdk()?.game.loadingStop()); },
       start() { safe(() => this.sdk()?.game.gameplayStart()); },
@@ -58,9 +62,12 @@ const Platform = (() => {
         return new Promise((done) => {
           const s = this.sdk();
           if (!s) return done(false);
+          // safety net: never leave the game stuck if the SDK never calls back
+          const timer = setTimeout(() => done(false), 90000);
+          const end = (ok) => { clearTimeout(timer); done(ok); };
           try {
-            s.ad.requestAd(type, { adStarted() {}, adFinished: () => done(true), adError: () => done(false) });
-          } catch (e) { done(false); }
+            s.ad.requestAd(type, { adStarted() {}, adFinished: () => end(true), adError: () => end(false) });
+          } catch (e) { end(false); }
         });
       },
       async commercial() { await this.ad('midgame'); },
@@ -70,26 +77,35 @@ const Platform = (() => {
 
   const impl = adapters[window.PLATFORM] || adapters.none;
   let playing = false;
+  let adShowing = false;
 
-  // Shared bookkeeping on top of the adapter: never send duplicate start/stop,
-  // and tell the game to mute while an ad is showing.
-  return {
+  // Shared bookkeeping on top of the adapter:
+  //  - never send duplicate start/stop
+  //  - only one ad at a time, and no gameplay events while it shows
+  //  - tell the game (onAd) to mute and block input while an ad is showing
+  const P = {
     name: window.PLATFORM in adapters ? window.PLATFORM : 'none',
-    hasRewarded: impl.hasRewarded,
-    onAdMute: () => {},
-    init: () => impl.init(),
+    hasRewarded: false, // set by init(): only true if the SDK really loaded
+    onAd: () => {},
+    get adShowing() { return adShowing; },
+    async init() {
+      const ok = await impl.init();
+      P.hasRewarded = impl.hasRewarded && ok === true;
+    },
     loaded: () => impl.loaded(),
-    start() { if (!playing) { playing = true; impl.start(); } },
+    start() { if (!playing && !adShowing) { playing = true; impl.start(); } },
     stop() { if (playing) { playing = false; impl.stop(); } },
-    async commercial() {
-      this.stop();
-      this.onAdMute(true);
-      try { await impl.commercial(); } finally { this.onAdMute(false); }
+    async showAd(kind) {
+      if (adShowing) return false;
+      P.stop();
+      adShowing = true;
+      P.onAd(true);
+      try { return await (kind === 'rewarded' ? impl.rewarded() : impl.commercial()); }
+      catch (e) { return false; }
+      finally { adShowing = false; P.onAd(false); }
     },
-    async rewarded() {
-      this.stop();
-      this.onAdMute(true);
-      try { return await impl.rewarded(); } finally { this.onAdMute(false); }
-    },
+    async commercial() { await P.showAd('commercial'); },
+    async rewarded() { return (await P.showAd('rewarded')) === true; },
   };
+  return P;
 })();
