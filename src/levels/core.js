@@ -236,10 +236,10 @@ const LEVELS = [
         if (a.done) return;
         e.preventDefault();
         try { six.setPointerCapture(e.pointerId); } catch (err) {}
-        const x0 = e.clientX, a0 = angle;
+        const x0 = toStage(e).x, a0 = angle;
         let moved = false;
         const move = (ev) => {
-          const dx = (ev.clientX - x0) / scale;
+          const dx = toStage(ev).x - x0;
           if (Math.abs(dx) > 6) moved = true;
           angle = a0 + dx;
           six.style.transform = `rotate(${angle}deg)`;

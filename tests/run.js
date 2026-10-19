@@ -1,6 +1,7 @@
 // Automated playtest. Usage:
 //   node tests/run.js              → solve every level in isolation + full playthrough on the web build
 //   node tests/run.js mouse jar    → only those level ids (isolated)
+//   node tests/run.js --portrait   → same, on a phone held upright (the game is drawn rotated)
 // Screenshots of each solved level land in tests/output/.
 const fs = require('fs');
 const path = require('path');
@@ -31,31 +32,39 @@ function serve(dir) {
 
 function helper(page) {
   const obj = (i) => page.locator('#stage .obj').nth(i);
-  const stageBox = () => page.locator('#stage').boundingBox();
-  const scale = () => page.evaluate(() => scale);
   const center = async (i) => { const b = await obj(i).boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+  // stage coords → screen coords (inverse of toStage in game.js, rotation included)
+  const screen = (x, y) => page.evaluate(([x, y]) => {
+    const r = document.querySelector('#app').getBoundingClientRect();
+    const dx = x - W / 2, dy = y + STAGE_TOP - H / 2;
+    const [sx, sy] = rotated ? [-dy, dx] : [dx, dy];
+    return [r.left + r.width / 2 + sx * scale, r.top + r.height / 2 + sy * scale];
+  }, [x, y]);
   const h = {
     page,
     wait: (ms) => page.waitForTimeout(ms),
     async tap(i) { const [x, y] = await center(i); await page.mouse.click(x, y); await h.wait(150); },
-    async tapAt(x, y) { const s = await stageBox(), k = await scale(); await page.mouse.click(s.x + x * k, s.y + y * k); await h.wait(150); },
+    async tapAt(x, y) { const [sx, sy] = await screen(x, y); await page.mouse.click(sx, sy); await h.wait(150); },
     async drag(i, x, y, steps = 12) {
-      const [fx, fy] = await center(i); const s = await stageBox(), k = await scale();
+      const [fx, fy] = await center(i); const [tx, ty] = await screen(x, y);
       await page.mouse.move(fx, fy); await page.mouse.down();
-      await page.mouse.move(s.x + x * k, s.y + y * k, { steps }); await page.mouse.up(); await h.wait(250);
+      await page.mouse.move(tx, ty, { steps }); await page.mouse.up(); await h.wait(250);
     },
     async dragFrom(fx, fy, x, y, steps = 12) { // stage coords → stage coords
-      const s = await stageBox(), k = await scale();
-      await page.mouse.move(s.x + fx * k, s.y + fy * k); await page.mouse.down();
-      await page.mouse.move(s.x + x * k, s.y + y * k, { steps }); await page.mouse.up(); await h.wait(250);
+      const [ax, ay] = await screen(fx, fy); const [tx, ty] = await screen(x, y);
+      await page.mouse.move(ax, ay); await page.mouse.down();
+      await page.mouse.move(tx, ty, { steps }); await page.mouse.up(); await h.wait(250);
     },
     async word(id) { await page.click(`#question [data-w="${id}"]`); await h.wait(150); },
   };
   return h;
 }
 
+const PORTRAIT = process.argv.includes('--portrait');
 async function newPage(browser, url, errors) {
-  const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+  const page = await browser.newPage(PORTRAIT
+    ? { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }
+    : { viewport: { width: 960, height: 540 } });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/POKI|Blocked script|Cross-Origin/.test(m.text())) errors.push(m.text()); });
   await page.goto(url);
@@ -66,7 +75,7 @@ async function newPage(browser, url, errors) {
 }
 
 (async () => {
-  const only = process.argv.slice(2);
+  const only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   const dist = fs.mkdtempSync(path.join(require('os').tmpdir(), 'tt-run-'));
   execSync('./build.sh web', { cwd: ROOT, stdio: 'ignore', env: { ...process.env, DIST: dist } });
   const srv = await serve(path.join(dist, 'web'));

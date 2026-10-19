@@ -1,7 +1,7 @@
 'use strict';
 
 const W = 960, H = 540; // 16:9
-const SW = 960, SH = 440; // stage
+const SW = 960, SH = 440, STAGE_TOP = 50; // stage size and its offset in #app
 const HINT_COST = 25, SKIP_COST = 50, REWARD = 50;
 const clearBonus = () => (Platform.hasRewarded ? 5 : 15); // no ads → earn bulbs by playing
 const $ = (s) => document.querySelector(s);
@@ -67,13 +67,23 @@ Platform.onAd = (on) => {
 };
 
 // ---------- layout ----------
+// Phones held upright (or apps that never rotate, like an in-app viewer) get the game
+// drawn sideways, filling the screen: turn the phone and it plays in landscape.
+let rotated = false, appRect = null;
 function fit() {
-  scale = Math.min(innerWidth / W, innerHeight / H);
-  $('#app').style.transform = `translate(-50%, -50%) scale(${scale})`;
+  rotated = innerHeight > innerWidth && matchMedia('(pointer: coarse)').matches;
+  const [vw, vh] = rotated ? [innerHeight, innerWidth] : [innerWidth, innerHeight];
+  scale = Math.min(vw / W, vh / H);
+  $('#app').style.transform = `translate(-50%, -50%) ${rotated ? 'rotate(90deg) ' : ''}scale(${scale})`;
+  appRect = $('#app').getBoundingClientRect(); // re-read only when the layout changes, not on every move
 }
 
-function toStage(e, r = stage.getBoundingClientRect()) {
-  return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
+// Screen point → stage coords, undoing the scale (and the rotation, if any).
+function toStage(e, r = appRect) {
+  let dx = (e.clientX - (r.left + r.width / 2)) / scale;
+  let dy = (e.clientY - (r.top + r.height / 2)) / scale;
+  if (rotated) [dx, dy] = [dy, -dx];
+  return { x: dx + W / 2, y: dy + H / 2 - STAGE_TOP };
 }
 
 // ---------- level API handed to each level's setup() ----------
@@ -111,8 +121,7 @@ function makeApi() {
         if (api.done || active) return;
         active = true;
         e.preventDefault(); e.stopPropagation();
-        const rect = stage.getBoundingClientRect(); // read once: no layout per move
-        const p0 = toStage(e, rect);
+        const p0 = toStage(e);
         const ox = parseFloat(el.style.left), oy = parseFloat(el.style.top);
         const oz = el.style.zIndex;
         const tr = el.style.transition;
@@ -122,7 +131,7 @@ function makeApi() {
         el.style.zIndex = o.z || 60;
         const move = (ev) => {
           if (ev.pointerId !== e.pointerId) return;
-          const p = toStage(ev, rect);
+          const p = toStage(ev); // fresh after a resize/rotation mid-drag
           const dx = p.x - p0.x, dy = p.y - p0.y;
           if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
           el.style.left = ox + dx + 'px';
@@ -250,7 +259,7 @@ function startLevel(i) {
   stage.style.transition = ''; // …but changes during the level still animate
   hide('#title'); hide('#panel');
   updateHud();
-  if (!portrait.matches) Platform.start();
+  Platform.start();
 }
 
 function winLevel(msg) {
@@ -363,12 +372,7 @@ addEventListener('keydown', (e) => { if (SCROLL_KEYS.includes(e.key)) e.preventD
 // don't leave buttons focused, or Space would press them again (e.g. start another ad)
 addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
 addEventListener('resize', fit);
-
-// Phones held upright see the "rotate" screen: that's an interruption, so pause gameplay.
-const portrait = matchMedia('(orientation: portrait) and (pointer: coarse)');
-const inLevel = () => api && !api.done && $('#panel').classList.contains('hidden') && $('#title').classList.contains('hidden');
-const onOrientation = () => { if (portrait.matches) Platform.stop(); else if (inLevel()) Platform.start(); };
-portrait.addEventListener ? portrait.addEventListener('change', onOrientation) : portrait.addListener(onOrientation);
+addEventListener('orientationchange', () => setTimeout(fit, 100));
 
 (async function boot() {
   Save.load();

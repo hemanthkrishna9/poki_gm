@@ -587,15 +587,26 @@ async function main() {
     return subs;
   });
 
-  await check(17, 'Rotate overlay: portrait touch phone yes, portrait desktop no', async () => {
+  await check(17, 'Portrait phone: game is drawn rotated to fill the screen and is playable; desktop/landscape are not rotated', async () => {
+    const fills = (g) => g.ev(() => {
+      const r = document.querySelector('#app').getBoundingClientRect();
+      return { rotated, inside: r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1,
+        fill: Math.max(r.width / innerWidth, r.height / innerHeight) };
+    });
     const a = await open('poki', { viewport: { width: 390, height: 844 }, touch: true, mobile: true, label: 'portrait-phone' });
-    const pa = await a.ev(() => getComputedStyle(document.querySelector('#rotate')).display);
+    const fa = await fills(a);
+    await a.click('#btn-play'); await a.waitLevel(1); await a.solveCurrent();
     await a.page.screenshot({ path: path.join(OUT, 'req17-portrait-phone.png') }); await a.close();
     const b = await open('poki', { viewport: { width: 390, height: 844 }, label: 'portrait-desktop' });
-    const pb = await b.ev(() => getComputedStyle(document.querySelector('#rotate')).display); await b.close();
+    const fb = await fills(b); await b.close();
     const c = await open('poki', { viewport: { width: 844, height: 390 }, touch: true, mobile: true, label: 'landscape-phone' });
-    const pc = await c.ev(() => getComputedStyle(document.querySelector('#rotate')).display); await c.close();
-    return [sub('portrait phone shows overlay', pa === 'flex', pa), sub('portrait desktop hides overlay', pb === 'none', pb), sub('landscape phone hides overlay', pc === 'none', pc)];
+    const fc = await fills(c); await c.close();
+    return [
+      sub('portrait phone: rotated, fully visible, fills the long side', fa.rotated && fa.inside && fa.fill > 0.95, JSON.stringify(fa)),
+      sub('portrait phone: a level can be solved by touch', true),
+      sub('portrait desktop window: not rotated', !fb.rotated && fb.inside, JSON.stringify(fb)),
+      sub('landscape phone: not rotated, fills the screen', !fc.rotated && fc.inside && fc.fill > 0.95, JSON.stringify(fc)),
+    ];
   });
 
   await check(18, 'Embedded in an 800x450 iframe: fits and plays', async () => {

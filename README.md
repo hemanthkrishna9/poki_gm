@@ -4,7 +4,7 @@ A small "tricky puzzle" HTML5 game for [Poki](https://developers.poki.com): one 
 
 It's plain HTML, CSS and JS with no build step and no asset files. All the art is inline SVG and the sounds are generated with WebAudio, so each zip is about 65 KB.
 
-There are 30 levels. The game is 16:9 (960×540) and landscape-only; a phone held upright is asked to rotate.
+There are 30 levels. The game is 16:9 (960×540). On a phone held upright it draws itself sideways to fill the screen, so it plays in landscape even in apps that never rotate.
 
 ## Run locally
 
@@ -19,6 +19,7 @@ On `localhost` the Poki SDK runs in debug mode and shows a placeholder ad betwee
 
 ```sh
 npm test                    # solves all 30 levels + a full playthrough (tests/run.js)
+node tests/run.js --portrait  # the same on a phone held upright (game drawn rotated)
 node tests/requirements.js  # 25 Poki / CrazyGames / web / mobile / robustness requirements (~4 min)
 node tests/abuse.js         # tries to break every level (softlocks, random tapping, leftovers)
 node tests/regressions.js   # bugs found in code review must stay fixed
